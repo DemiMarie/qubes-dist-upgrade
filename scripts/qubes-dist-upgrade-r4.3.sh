@@ -378,7 +378,7 @@ if [ "$assumeyes" == "1" ] || confirm "-> Launch upgrade process?"; then
                 fi
 
                 autostart_before=$(systemctl list-units --plain --quiet --all --full 'qubes-vm@*.service' | cut -f 1 -d ' ')
-                systemctl preset-all
+                systemctl preset-all || :
                 if [ -n "$autostart_before" ]; then
                     systemctl enable $autostart_before
                 fi

@@ -83,7 +83,7 @@ shutdown_nonessential_vms() {
         return
     fi
     mapfile -t running_vms < <(qvm-ls --running --raw-list --fields name)
-    keep_running=( dom0 "$usbvm" "$netvm" "$updatevm" "${extra_keep_running[@]}" )
+    keep_running=( dom0 "$usbvm" "${updatevm_deps[@]}" "${extra_keep_running[@]}" )
     # all the updates-proxy targets
     if [ -e "/etc/qubes-rpc/policy/qubes.UpdatesProxy" ]; then
         mapfile -t updates_proxy < <(grep '^\s*[^#].*target=' /etc/qubes-rpc/policy/qubes.UpdatesProxy | cut -d = -f 2)
@@ -228,6 +228,7 @@ if [ -z "${updatevm-}" ]; then
     # checks for that independently)
     updatevm=$(qubes-prefs updatevm 2>/dev/null || :)
 fi
+updatevm_deps=( "$netvm" "$updatevm" )
 max_concurrency="${max_concurrency:-4}"
 
 # Run prechecks first
@@ -245,6 +246,17 @@ if which xinput > /dev/null; then
     done
 else
     echo "WARNING: Unable to detect qubes providing input devices. PLease provide them using --keep-running option."
+fi
+
+# Add parent(s) of updatevm - for example sys-firewall for sys-whonix
+if [ -n "$updatevm" ]; then
+    parent=$(qvm-prefs "$updatevm" netvm || :)
+    while [ -n "$parent" ]; do
+        if [ "$parent" != "$netvm" ] && [[ ! " ${extra_keep_running[*]} " = *" $parent "* ]]; then
+            updatevm_deps+=( "$parent" )
+        fi
+        parent=$(qvm-prefs "$parent" netvm || :)
+    done
 fi
 
 # shellcheck disable=SC1003

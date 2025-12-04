@@ -447,7 +447,7 @@ if [ "$assumeyes" == "1" ] || confirm "-> Launch upgrade process?"; then
                 if [ "$enable_current_testing" ]; then
                     opt=--enable-current-testing
                 fi
-                qvm-run -q -u root -p "$vm" "bash /home/user/QubesIncoming/dom0/qubes-dist-upgrade-r4.3-vm.sh $opt && rm -f /home/user/QubesIncoming/dom0/qubes-dist-upgrade-r4.3-vm.sh" || exit_code=$?
+                qvm-run -q -u root -p "$vm" "user=\$(qubesdb-read /default-user || echo user); path=/home/\$user/QubesIncoming/dom0/qubes-dist-upgrade-r4.3-vm.sh; bash \"\$path\" $opt && rm -f \"\$path\"" || exit_code=$?
                 qvm-shutdown --wait "$vm"
                 if [ -n "$exit_code" ]; then
                     case "$exit_code" in

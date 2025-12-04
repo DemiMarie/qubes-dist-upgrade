@@ -433,6 +433,10 @@ if [ "$assumeyes" == "1" ] || confirm "-> Launch upgrade process?"; then
         if [ "${#all_vms[*]}" -gt 0 ]; then
             for vm in ${all_vms[*]};
             do
+                if ! qvm-features "$vm" qrexec >/dev/null; then
+                    echo "----> Skipping update of $vm, no qrexec detected"
+                    continue
+                fi
                 echo "----> Upgrading $vm..."
                 if [ "$(qvm-volume info "$vm:root" revisions_to_keep)" == 0 ]; then
                     echo "WARNING: No snapshot backup history is setup (revisions_to_keep = 0). We cannot revert upgrade in case of any issue."

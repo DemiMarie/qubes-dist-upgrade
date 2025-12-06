@@ -437,6 +437,10 @@ if [ "$assumeyes" == "1" ] || confirm "-> Launch upgrade process?"; then
                     echo "----> Skipping update of $vm, no qrexec detected"
                     continue
                 fi
+                if [ "$(qvm-features "$vm" qubes-agent-version || :)" = 4.3 ]; then
+                    echo "----> Skipping update of $vm, already updated to 4.3"
+                    continue
+                fi
                 echo "----> Upgrading $vm..."
                 if [ "$(qvm-volume info "$vm:root" revisions_to_keep)" == 0 ]; then
                     echo "WARNING: No snapshot backup history is setup (revisions_to_keep = 0). We cannot revert upgrade in case of any issue."

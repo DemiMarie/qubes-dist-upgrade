@@ -147,7 +147,9 @@ restore_rpmsave_policy() {
 }
 
 has_updated_qubes_version() {
-    grep -q 'VERSION_ID=4.3' /etc/os-release
+    grep -q 'VERSION_ID=4.3' /etc/os-release || return 1
+    xl info xen_version | grep -qF 4.19 || return 1
+    rpm -q qubes-core-qrexec-dom0 | grep -qF 4.3 || return 1
 }
 
 #-----------------------------------------------------------------------------#

@@ -172,6 +172,9 @@ cleanup_boot_backup() {
 
 #-----------------------------------------------------------------------------#
 
+# for re-exec with logging
+original_command="$0 $*"
+
 if ! OPTS=$(getopt -o tlrsxyu:n:f:jke --long releasever:,help,update,release-upgrade,dist-upgrade,template-standalone-upgrade,finalize,check-supported-templates,all-pre-reboot,all-post-reboot,assumeyes,usbvm:,netvm:,updatevm:,skip-template-upgrade,skip-standalone-upgrade,only-update:,max-concurrency:,keep-running:,enable-current-testing -n "$0" -- "$@"); then
     echo "ERROR: Failed while parsing options."
     exit 1
@@ -230,6 +233,15 @@ done
 
 if [[ $EUID -ne 0 ]]; then
     echo "ERROR: This script must be run with root permissions"
+    exit 1
+fi
+
+if [ -z "$DIST_UPGRADE_LOGGED" ]; then
+    log_path=/var/log/qubes-dist-upgrade.log
+    echo "INFO: Saving log to $log_path"
+    echo "Starting '$original_command' at $(date -R)" >> "$log_path"
+    exec script -e -c "DIST_UPGRADE_LOGGED=$log_path $original_command" -a "$log_path"
+    echo "ERROR: failed to log output"
     exit 1
 fi
 

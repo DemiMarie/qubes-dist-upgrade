@@ -9,6 +9,7 @@ if [ "${VERBOSE:-0}" -ge 2 ] || [ "${DEBUG:-0}" -eq 1 ]; then
 fi
 
 scriptsdir=/usr/lib/qubes
+boot_backup_path=/boot/qubes42upgrade-backup
 
 #-----------------------------------------------------------------------------#
 
@@ -152,6 +153,23 @@ has_updated_qubes_version() {
     rpm -q qubes-core-qrexec-dom0 | grep -qF 4.3 || return 1
 }
 
+boot_backup() {
+    if [ -d "$boot_backup_path" ]; then
+        echo "INFO: $boot_backup_path already exists, not creating new backup"
+        return
+    fi
+    echo "---> INFO: Making /boot backup in $boot_backup_path"
+    mkdir -p "$boot_backup_path"
+    cp -axl /boot/vmlinuz* /boot/initramfs* /boot/xen* /boot/grub* /boot/config* "$boot_backup_path/"
+}
+
+cleanup_boot_backup() {
+    if [ -d "$boot_backup_path" ]; then
+        echo "INFO: Removing /boot backup from $boot_backup_path"
+        rm -rf "$boot_backup_path"
+    fi
+}
+
 #-----------------------------------------------------------------------------#
 
 if ! OPTS=$(getopt -o tlrsxyu:n:f:jke --long releasever:,help,update,release-upgrade,dist-upgrade,template-standalone-upgrade,finalize,check-supported-templates,all-pre-reboot,all-post-reboot,assumeyes,usbvm:,netvm:,updatevm:,skip-template-upgrade,skip-standalone-upgrade,only-update:,max-concurrency:,keep-running:,enable-current-testing -n "$0" -- "$@"); then
@@ -286,6 +304,7 @@ if [ "$assumeyes" == "1" ] || confirm "-> Launch upgrade process?"; then
             lvcreate -n Qubes42UpgradeBackup -s "$root_vol_name"
             echo "--> If upgrade to 4.3 fails, you can restore your dom0 snapshot with sudo lvconvert --merge $root_group_name/Qubes42UpgradeBackup. Reboot after restoration."
         fi
+        boot_backup
 
         # Ensure 'gui' and 'qrexec' in default template used
         # for management else 'qubesctl' will failed
@@ -556,6 +575,9 @@ if [ "$assumeyes" == "1" ] || confirm "-> Launch upgrade process?"; then
                 fi
             fi
         fi
+
+        cleanup_boot_backup
+
         if [ "$(xl info total_memory)" -ge 15000 ]; then
             echo "--> (STAGE 5) Enabling disposable qubes preloading"
             qubesctl top.enable qvm.disposable-preload pillar=True

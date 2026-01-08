@@ -170,6 +170,18 @@ cleanup_boot_backup() {
     fi
 }
 
+error_handler() {
+    errval=$?
+    echo ""
+    echo "ERROR: upgrade failed! Inspect messages above for details"
+    if [ -n "$DIST_UPGRADE_LOGGED" ]; then
+        echo "All messages we saved also to $DIST_UPGRADE_LOGGED"
+    fi
+    echo "Do not continue with the next upgrade stage!"
+    echo ""
+    exit "$errval"
+}
+
 #-----------------------------------------------------------------------------#
 
 # for re-exec with logging
@@ -244,6 +256,8 @@ if [ -z "$DIST_UPGRADE_LOGGED" ]; then
     echo "ERROR: failed to log output"
     exit 1
 fi
+
+trap error_handler ERR
 
 if [ "$assumeyes" == "1" ];  then
     dnf_opts_noclean="${dnf_opts_noclean} -y"

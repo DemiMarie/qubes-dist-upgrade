@@ -279,7 +279,7 @@ if [ "$assumeyes" == "1" ] || confirm "-> Launch upgrade process?"; then
             echo "---> (STAGE 1) Skipping dom0 snapshot - no LVM volume found"
         elif [ "$(get_volume_type "$root_vol_name")" != "thin,sparse" ] ; then
             echo "---> (STAGE 1) Skipping dom0 snapshot - no not a thin volume"
-        elif lvs "$root_group_name/Qubes41UpgradeBackup" > /dev/null 2>&1 ; then
+        elif lvs "$root_group_name/Qubes42UpgradeBackup" > /dev/null 2>&1 ; then
             echo "---> (STAGE 1) Skipping dom0 snapshot - snapshot already exists. If you want to make a snapshot anyway, remove the existing one using lvremove $root_group_name/Qubes42UpgradeBackup"
         elif [ "$assumeyes" == "1" ] || confirm "---> (STAGE 1) Do you want to make a dom0 snapshot?"; then
             # make a dom0 snapshot

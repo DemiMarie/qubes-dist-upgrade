@@ -395,6 +395,10 @@ if [ "$assumeyes" == "1" ] || confirm "-> Launch upgrade process?"; then
 
     if [ "$dist_upgrade" == "1" ]; then
         echo "---> (STAGE 3) Upgrading to QubesOS R4.3 and Fedora 41 repositories..."
+        if [ "$(rpm -q --qf='%{VERSION}' qubes-release)" != "4.3" ]; then
+            echo "ERROR: qubes-release package is not at 4.3 version yet, complete STAGE 2 first"
+            exit 1
+        fi
         # xscreensaver remains unsuable while upgrading
         # it's impossible to unlock it due to PAM update
         echo "INFO: Xscreensaver has been killed. Desktop won't lock before next reboot."

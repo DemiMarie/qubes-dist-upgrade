@@ -71,4 +71,31 @@ elif [ -e /etc/debian_version ]; then
     if [ "$enable_current_testing" ]; then
         rm -f /etc/apt/sources.list.d/qubes-r4-testing.list
     fi
+
+elif [ -e /etc/arch-release ]; then
+    for conf in /etc/pacman.d/??-qubes*.conf /etc/pacman.d/??-qubes*.conf.disabled; do
+        if [ -h "$conf" ]; then
+            continue
+        fi
+        if ! grep -q r4.2 "$conf"; then
+            continue
+        fi
+        # this should change two places: repository name and server URL
+        sed -i.bak -e 's/r4\.2/r4.3/' "$conf"
+    done
+
+    if [ "$enable_current_testing" ]; then
+        # use alternative name, for easier cleanup
+        if [ -e "/etc/pacman.d/85-qubes-current-testing.conf.disabled" ]; then
+            ln -nsf 85-qubes-current-testing.conf.disabled /etc/pacman.d/84-qubes-current-testing.conf
+        else
+            echo "WARNING: cannot find /etc/pacman.d/85-qubes-current-testing.conf.disabled, not enabling the current-testing repository" >&2
+        fi
+    fi
+
+    pacman -Syu --noconfirm
+
+    if [ "$enable_current_testing" ]; then
+        rm -f /etc/pacman.d/84-qubes-current-testing.conf
+    fi
 fi
